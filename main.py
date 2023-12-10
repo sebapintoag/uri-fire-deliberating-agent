@@ -14,7 +14,14 @@ weather_data = {
     'place': 'Valparaiso'
 }
 
+print('-> Input data')
+print('Drone data: ' + str(drone_data))
+print('Weather data: ' + str(weather_data))
+
+# Evaluate situation and make decisions
 situation = da.evaluate_situation(drone_data, weather_data)
 decisions = da.make_decisions(situation)
 
+# Print output
+print('\n-> Results')
 print(decisions)
