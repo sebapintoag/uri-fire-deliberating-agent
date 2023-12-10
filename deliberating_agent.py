@@ -131,7 +131,7 @@ def make_decisions(situation_state):
                 }
             )
     # No mather what, if risk_rank is 2 or less and, government authorities are notified
-    if situation_state["risk_rank"] <= 2:
+    if situation_state["risk_rank"] <= 2 and situation_state["type"] != "weather":
         decisions.append(
             {
                 "type": "call",
