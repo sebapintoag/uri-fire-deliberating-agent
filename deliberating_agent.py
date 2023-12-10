@@ -22,19 +22,21 @@ def evaluate_situation(drone_data={}, weather_data={}):
     risk_rank = 5
     drone_data_type = None
 
+    #breakpoint()
+
     # Evaluate dron data
-    if drone_data["risk_factor"] == "fire":
+    if drone_data and drone_data.get("risk_factor") == "fire":
         return {"type": "fire", "risk_rank": 0, "location": drone_data.get("location")}
 
-    if drone_data["risk_factor"] in DANGEROUS_OBJECTS:
+    if drone_data and drone_data.get("risk_factor") in DANGEROUS_OBJECTS:
         drone_data_type = "object"
         risk_rank -= 1
-        if drone_data["surroundings"] in VULNERABLE_SURROUNDINGS:
+        if drone_data.get("surroundings") in VULNERABLE_SURROUNDINGS:
             risk_rank -= 1
-    elif drone_data["risk_factor"] in DANGEROUS_ACTIVITIES:
+    elif drone_data and drone_data["risk_factor"] in DANGEROUS_ACTIVITIES:
         drone_data_type = "activity"
         risk_rank -= 1
-        if drone_data["surroundings"] in VULNERABLE_SURROUNDINGS:
+        if drone_data.get("surroundings") in VULNERABLE_SURROUNDINGS:
             risk_rank -= 1
 
     # Evaluate weather data
@@ -45,7 +47,7 @@ def evaluate_situation(drone_data={}, weather_data={}):
     if weather_data["humidity"] <= 5.0:
         risk_rank -= 1
 
-    if len(drone_data) > 0:
+    if drone_data and len(drone_data) > 0:
         return {
             "type": drone_data_type,
             "subtype": drone_data["risk_factor"],
@@ -65,7 +67,12 @@ def evaluate_situation(drone_data={}, weather_data={}):
 def make_decisions(situation_state):
     decisions = []
 
-    if situation_state["type"] == "weather" and situation_state["risk_factor"] <= 3:
+    if situation_state["type"] == "fire":
+        decisions.append(
+            {"type": "call", "collaborator": "fire_fighters", "location": situation_state.get("location")}
+        )
+
+    if situation_state["type"] == "weather" and situation_state.get("risk_rank") <= 3:
         decisions.append(
             {"type": "monitoring_proposal", "place": situation_state["place"]}
         )
@@ -123,13 +130,12 @@ def make_decisions(situation_state):
                     "location": situation_state.get("location"),
                 }
             )
-
-    # No mather what, if risk_rank is 2 or less government authorities are notified
+    # No mather what, if risk_rank is 2 or less and, government authorities are notified
     if situation_state["risk_rank"] <= 2:
         decisions.append(
             {
                 "type": "call",
-                "collaborator": "governor",
+                "collaborator": "authorities",
                 "location": situation_state.get("location"),
             }
         )
