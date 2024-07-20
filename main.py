@@ -1,68 +1,39 @@
 import deliberating_agent as da
-import printer
+from datetime import datetime
+import csv
 
-# Inputs
-cases = [
-    {
-        "drone_data": {
-            "risk_factor": "trash",
-            "surroundings": "dry_grass",
-            "location": [-33.051876, -71.547227],
-        },
-        "weather_data": {
-            "temperature": 29.0,
-            "wind_speed": 10.0,
-            "humidity": 0.8,
-            "place": "Valparaiso",
-        },
-    },
-    {
-        "drone_data": {
-            "risk_factor": "smoking",
-            "surroundings": "trash",
-            "location": [-33.051876, -71.547227],
-        },
-        "weather_data": {
-            "temperature": 20.0,
-            "wind_speed": 26.0,
-            "humidity": 20.2,
-            "place": "Valparaiso",
-        },
-    },
-    {
-        "weather_data": {
-            "temperature": 35.0,
-            "wind_speed": 40.0,
-            "humidity": 1.0,
-            "place": "Valparaiso",
-        },
-    },
-    {
-        "drone_data": {
-            "risk_factor": "fire",
-            "surroundings": "houses",
-            "location": [-33.051876, -71.547227],
-        },
-        "weather_data": {
-            "temperature": 31.0,
-            "wind_speed": 26.0,
-            "humidity": 0.5,
-            "place": "Valparaiso",
-        },
-    },
-]
+cases = []
 
-for i, case in enumerate(cases):
-    drone_data = case.get("drone_data")
-    weather_data = case.get("weather_data")
+with open('sample_data.csv', newline='') as csvfile:
+    spamreader = csv.reader(csvfile, delimiter=';', quotechar='|')
+    for index, row in enumerate(spamreader):
+        if index == 0:
+            continue
+        cases.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]])
 
-    print("-- Case " + str(i + 1) + " --")
+results = [['ID', 'Datetime', 'Latitude', 'Longitude', 'Temperature (Cº)', 'Wind Speed (Km/H)', 'Humidity (%)', 'Risk factor', 'Surroundings', 'Decisions']]
+
+for case in cases:
+    drone_data = {
+        "risk_factor": case[7],
+        "surroundings": case[8],
+        "location": [float(case[2]), float(case[3])],
+        "datetime": datetime.strptime(case[1], "%d/%m/%Y %H:%M:%S")
+        }
+    weather_data = {
+        "temperature": int(case[4]),
+        "wind_speed": int(case[5]),
+        "humidity": int(case[6])
+        }
 
     # Evaluate situation and make decisions
     situation = da.evaluate_situation(drone_data, weather_data)
     decisions = da.make_decisions(situation)
+    results.append([case[0], case[1], case[2], case[3], case[4], case[5], case[6], case[7], case[8], decisions])
 
+with open('results.csv', 'w', newline='') as csvfile:
+    spamwriter = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    for row in results:
+        spamwriter.writerow(row)
 
-    # Print inputs and output
-    printer.print_inputs(drone_data, weather_data)
-    printer.print_output(decisions)
+print('Results written in results.csv')

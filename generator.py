@@ -23,7 +23,7 @@ current_coordinates = copy.deepcopy(START_COORDINATES)
 i = 0
 aux_lng = 1
 aux_lat = 1
-data = [['ID', 'Datetime', 'Latitude', 'Longitude', 'Temperature (Cº)', 'Wind Speed (Km/H)', 'Humidity (%)', 'Risk element', 'Risk activity', 'Surroundings']]
+data = [['ID', 'Datetime', 'Latitude', 'Longitude', 'Temperature (Cº)', 'Wind Speed (Km/H)', 'Humidity (%)', 'Risk factor', 'Surroundings']]
 start_datetime = datetime(2023, 12, 1, 0, 0, 0)
 temp_aux = random.choice(SAMPLE_TEMPERATURE_VALUES)
 wind_speed_aux = random.choice(SAMPLE_WIND_SPEED_VALUES)
@@ -61,17 +61,15 @@ while i < 15000:
         aux_lng = aux_lng * -1
     else:
         current_coordinates['lng'] = current_coordinates['lng'] + aux_lng * 0.005000
-    # Select risk element
-    risk_element = random.choice(SAMPLE_RISK_ELEMENTS)
-    # Select risk activity
-    risk_activity = random.choice(SAMPLE_RISK_ACTIVITIES)
+    # Select risk factor
+    risk_factor = random.choice(SAMPLE_RISK_ELEMENTS + SAMPLE_RISK_ACTIVITIES)
     # Select surrounding
     surrounding = random.choice(SAMPLE_SURROUNDINGS)
     # Add data
     data.append([i, current_datetime.strftime("%d/%m/%Y %H:%M:%S"),
                  current_coordinates['lat'], current_coordinates['lng'],
                  temp_aux, wind_speed_aux, humidity_aux,
-                 risk_element, risk_activity, surrounding])
+                 risk_factor, surrounding])
     i = i + 1
 
 with open('sample_data.csv', 'w', newline='') as csvfile:
