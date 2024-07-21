@@ -90,7 +90,7 @@ def evaluate_situation(drone_data={}, weather_data={}):
         'datetime': datetime  }
 
 # type: call, monitoring_proposal
-def make_decisions(situation_state):
+def make_decisions(situation_state, randomness=False):
     score = situation_state['score']
     risk_factor = situation_state['risk_factor']
     fire_danger = situation_state['fire_danger']

@@ -11,7 +11,7 @@ with open('sample_data.csv', newline='') as csvfile:
             continue
         cases.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]])
 
-results = [['ID', 'Datetime', 'Latitude', 'Longitude', 'Temperature (Cº)', 'Wind Speed (Km/H)', 'Humidity (%)', 'Risk factor', 'Surroundings', 'Decisions']]
+results = [['ID', 'Datetime', 'Latitude', 'Longitude', 'Temperature (Cº)', 'Wind Speed (Km/H)', 'Humidity (%)', 'Risk factor', 'Surroundings', 'Expected decisions', 'Given decisions']]
 
 for case in cases:
     drone_data = {
@@ -28,8 +28,9 @@ for case in cases:
 
     # Evaluate situation and make decisions
     situation = da.evaluate_situation(drone_data, weather_data)
-    decisions = da.make_decisions(situation)
-    results.append([case[0], case[1], case[2], case[3], case[4], case[5], case[6], case[7], case[8], decisions])
+    expected_decisions = da.make_decisions(situation)
+    given_decisions = da.make_decisions(situation, True)
+    results.append([case[0], case[1], case[2], case[3], case[4], case[5], case[6], case[7], case[8], expected_decisions, given_decisions])
 
 with open('results.csv', 'w', newline='') as csvfile:
     spamwriter = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
