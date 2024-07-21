@@ -1,6 +1,4 @@
-# type: object, activity, weather, fire
-# This function always evaluates weather data. If drone data is received, it considers most recent weather data
-#   and they're evaluated togheter.
+import random
 
 DANGEROUS_ACTIVITIES = ['smoking', 'lit campfire', 'lighting a grill', 'burning waste', 'suspicious presence', 'soldering']
 DANGEROUS_ELEMENTS = ['wastes', 'dry grass', 'wood', 'papers', 'illegal electricity connection', 'gas recipient', 'glass', 'glass bottle', 'bonfire', 'grill on', 'fire', 'smoke']
@@ -104,6 +102,14 @@ def make_decisions(situation_state, randomness=False):
     datetime = situation_state['datetime']
 
     decisions = []
+
+    # Apply randomness
+    if randomness:
+        delta = random.choice([1, 2, 3])
+        sign = random.choice([-1, 1])
+        # 20% chance of modify score
+        if random.random()*100 >= 80:
+            score = score + (delta * sign)
 
     if fire_danger:
         decisions.append("Call fire fighters")
