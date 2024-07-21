@@ -160,4 +160,6 @@ def make_decisions(situation_state, randomness=False):
         if surroundings_danger or element_danger:
             decisions.append('Notify local collaborators')
 
+    # TODO: Store decisions made
+
     return decisions
