@@ -1,143 +1,157 @@
 # type: object, activity, weather, fire
 # This function always evaluates weather data. If drone data is received, it considers most recent weather data
 #   and they're evaluated togheter.
+
+DANGEROUS_ACTIVITIES = ['smoking', 'lit campfire', 'lighting a grill', 'burning waste', 'suspicious presence', 'soldering']
+DANGEROUS_ELEMENTS = ['wastes', 'dry grass', 'wood', 'papers', 'illegal electricity connection', 'gas recipient', 'glass', 'glass bottle', 'bonfire', 'grill on', 'fire', 'smoke']
+VULNERABLE_SURROUNDINGS = ['grass', 'dry grass', 'trees', 'trash', 'house', 'tent', 'electric connection', 'fuel recipient', 'wood']
+
+DECISIONS_HISTORY = {}
+
 def evaluate_situation(drone_data={}, weather_data={}):
-    DANGEROUS_OBJECTS = [
-        "trash",
-        "dry_grass",
-        "wood",
-        "electric_cables",
-        "gas_installation",
-    ]
-    DANGEROUS_ACTIVITIES = [
-        "smoking",
-        "bonfire",
-        "bbq",
-        "burning_trash",
-        "suspicious_presence",
-        "soldering",
-    ]
-    VULNERABLE_SURROUNDINGS = ["grass", "trees", "trash", "houses"]
-
-    risk_rank = 5
-    drone_data_type = None
-
-    #breakpoint()
-
-    # Evaluate dron data
-    if drone_data and drone_data.get("risk_factor") == "fire":
-        return {"type": "fire", "risk_rank": 0, "location": drone_data.get("location")}
-
-    if drone_data and drone_data.get("risk_factor") in DANGEROUS_OBJECTS:
-        drone_data_type = "object"
-        risk_rank -= 1
-        if drone_data.get("surroundings") in VULNERABLE_SURROUNDINGS:
-            risk_rank -= 1
-    elif drone_data and drone_data["risk_factor"] in DANGEROUS_ACTIVITIES:
-        drone_data_type = "activity"
-        risk_rank -= 1
-        if drone_data.get("surroundings") in VULNERABLE_SURROUNDINGS:
-            risk_rank -= 1
+    # Risk score
+    score = 0
+    # Weather data
+    temperature = weather_data['temperature']
+    wind_speed = weather_data['wind_speed']
+    humidity = weather_data['humidity']
+    # Drone data
+    risk_factor = drone_data['risk_factor']
+    surroundings = drone_data['surroundings']
+    lat = drone_data['location'][0]
+    lng = drone_data['location'][1]
+    datetime = drone_data['datetime']
+    # Danger detections
+    fire_danger = False
+    weather_danger = False
+    element_danger = False
+    activity_danger = False
+    surroundings_danger = False
+    previous_danger = False
 
     # Evaluate weather data
-    if weather_data["temperature"] >= 30.0:
-        risk_rank -= 1
-    if weather_data["wind_speed"] >= 30.0:
-        risk_rank -= 1
-    if weather_data["humidity"] <= 5.0:
-        risk_rank -= 1
+    if temperature >= 30:
+        score = score + 1
+    if wind_speed >= 30:
+        score = score + 1
+    if humidity <= 30:
+        score = score + 1
+    if score == 3:
+        weather_danger = True
 
-    if drone_data and len(drone_data) > 0:
-        return {
-            "type": drone_data_type,
-            "subtype": drone_data["risk_factor"],
-            "risk_rank": risk_rank,
-            "location": drone_data.get("location"),
-        }
+    # Evaluate dron data
+    if risk_factor in ['fire', 'smoke']:
+        # Should call emergency services right away or assign highest score
+        fire_danger = True
+        score = score + 9
+        if surroundings in VULNERABLE_SURROUNDINGS:
+            surroundings_danger = True
+    if risk_factor != 'none':
+        if risk_factor in DANGEROUS_ACTIVITIES:
+            activity_danger = True
+            if surroundings in VULNERABLE_SURROUNDINGS:
+                surroundings_danger = True
+                if weather_danger:
+                    score = score + 5 # Max: 8
+                else:
+                    score = score + 3 # Max: 5
+            else:
+                if weather_danger:
+                    score = score + 4 # Max: 7
+                else:
+                    score = score + 2 # Max: 4
+        elif risk_factor in DANGEROUS_ELEMENTS:
+            element_danger = True
+            if surroundings in VULNERABLE_SURROUNDINGS:
+                surroundings_danger = True
+                if weather_danger:
+                    score = score + 3 # Max: 6
+                else:
+                    score = score + 2 # Max: 4
+            else:
+                if weather_danger:
+                    score = score + 2 # Max: 5
+                else:
+                    score = score + 1 # Max: 2
+
+    # TODO: Evaluate past data in same or near location
 
     return {
-        "type": "weather",
-        "subtype": "trash",
-        "risk_rank": risk_rank,
-        "place": weather_data["place"],
-    }
-
+        'score': score,
+        'risk_factor': risk_factor,
+        'fire_danger': fire_danger,
+        'weather_danger': weather_danger,
+        'activity_danger': activity_danger,
+        'element_danger': element_danger,
+        'surroundings_danger': surroundings_danger,
+        'previous_danger': previous_danger,
+        'lat': lat,
+        'lng': lng,
+        'datetime': datetime  }
 
 # type: call, monitoring_proposal
 def make_decisions(situation_state):
+    score = situation_state['score']
+    risk_factor = situation_state['risk_factor']
+    fire_danger = situation_state['fire_danger']
+    weather_danger = situation_state['weather_danger']
+    activity_danger = situation_state['activity_danger']
+    element_danger = situation_state['element_danger']
+    surroundings_danger = situation_state['surroundings_danger']
+    previous_danger = situation_state['previous_danger']
+    lat = situation_state['lat']
+    lng = situation_state['lng']
+    datetime = situation_state['datetime']
+
     decisions = []
 
-    if situation_state["type"] == "fire":
-        decisions.append(
-            {"type": "call", "collaborator": "fire_fighters", "location": situation_state.get("location")}
-        )
+    if fire_danger:
+        decisions.append("Call fire fighters")
+        decisions.append("Notify government authorities")
+        if surroundings_danger:
+            decisions.append('Notify local authorities')
+            decisions.append('Evacuate zone')
 
-    if situation_state["type"] == "weather" and situation_state.get("risk_rank") <= 3:
-        decisions.append(
-            {"type": "monitoring_proposal", "place": situation_state["place"]}
-        )
-
-    if situation_state["type"] in ["object", "activity"]:
-        if situation_state["subtype"] in ["trash", "wood", "dry_grass"]:
-            decisions.append(
-                {
-                    "type": "call",
-                    "collaborator": "trash_collectors",
-                    "location": situation_state.get("location"),
-                }
-            )
-        elif situation_state["subtype"] in ["electric_cables"]:
-            decisions.append(
-                {
-                    "type": "call",
-                    "collaborator": "electric_operators",
-                    "location": situation_state.get("location"),
-                }
-            )
-        elif situation_state["subtype"] in ["gas_installation"]:
-            decisions.append(
-                {
-                    "type": "call",
-                    "collaborator": "gas_operators",
-                    "location": situation_state.get("location"),
-                }
-            )
-        elif situation_state["subtype"] in ["bonfire", "burning_trash"]:
-            decisions.append(
-                {
-                    "type": "call",
-                    "collaborator": "security",
-                    "location": situation_state.get("location"),
-                }
-            )
-            decisions.append(
-                {
-                    "type": "call",
-                    "collaborator": "fire_fighters",
-                    "location": situation_state.get("location"),
-                }
-            )
-        elif situation_state["subtype"] in [
-            "smoking",
-            "bbq",
-            "suspicious_presence",
-            "soldering",
-        ]:
-            decisions.append(
-                {
-                    "type": "call",
-                    "collaborator": "security",
-                    "location": situation_state.get("location"),
-                }
-            )
-    # No mather what, if risk_rank is 2 or less and, government authorities are notified
-    if situation_state["risk_rank"] <= 2 and situation_state["type"] != "weather":
-        decisions.append(
-            {
-                "type": "call",
-                "collaborator": "authorities",
-                "location": situation_state.get("location"),
-            }
-        )
+    if score >= 9:
+        decisions.append('Request support to security forces')
+        if surroundings_danger:
+            decisions.append('Notify local collaborators')
+    if score >= 6:
+        if activity_danger:
+            decisions.append('Request support to security forces')
+            decisions.append("Notify government authorities")
+            decisions.append('Notify local authorities')
+            if surroundings_danger:
+                decisions.append('Notify local collaborators')
+        elif element_danger:
+            if surroundings_danger or risk_factor in ['gas recipient', 'bonfire', 'grill on']:
+                decisions.append('Notify local authorities')
+            if risk_factor in ['wastes', 'wood', 'papers', 'glass', 'glass bottle']:
+                decisions.append('Contact waste collectors')
+            elif risk_factor in ['illegal electricity connection']:
+                decisions.append('Contact power company')
+            elif risk_factor in ['bonfire']:
+                decisions.append('Call fire fighters')
+            else:
+                decisions.append('Notify local collaborators')
+    elif score >= 3:
+        if activity_danger:
+            decisions.append('Notify local authorities')
+            if surroundings_danger:
+                decisions.append('Notify local collaborators')
+        elif element_danger:
+            if surroundings_danger:
+                decisions.append('Notify local collaborators')
+            if risk_factor in ['wastes', 'papers', 'glass', 'glass bottle']:
+                decisions.append('Contact waste collectors')
+            elif risk_factor in ['bonfire']:
+                decisions.append('Call fire fighters')
+    else:
+        if weather_danger:
+            decisions.append('Propose monitoring flight')
+        if activity_danger:
+            decisions.append('Notify local authorities')
+        if surroundings_danger or element_danger:
+            decisions.append('Notify local collaborators')
 
     return decisions
