@@ -1,6 +1,7 @@
 import random
 import copy
 import csv
+import math
 from datetime import datetime, timedelta
 
 # Sample data for each variable
@@ -19,11 +20,12 @@ SAMPLE_HUMIDITY_VALUES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 
 START_COORDINATES = {'lat': -33.045642, 'lng': -71.535046}
 MINUTES_PER_DAY = 60 * 24
 REGISTER_AT_MINUTES = 10 # Register data every 10 minutos
+
 current_coordinates = copy.deepcopy(START_COORDINATES)
 i = 0
 aux_lng = 1
 aux_lat = 1
-data = [['ID', 'Datetime', 'Latitude', 'Longitude', 'Temperature (Cº)', 'Wind Speed (Km/H)', 'Humidity (%)', 'Risk factor', 'Surroundings']]
+data = [['ID', 'Datetime', 'Latitude', 'Longitude', 'Temperature (Cº)', 'Wind Speed (Km/H)', 'Humidity (%)', 'Risk factor', 'Surroundings', 'Distance (Mts)']]
 start_datetime = datetime(2023, 12, 1, 0, 0, 0)
 temp_aux = random.choice(SAMPLE_TEMPERATURE_VALUES)
 wind_speed_aux = random.choice(SAMPLE_WIND_SPEED_VALUES)
@@ -65,11 +67,14 @@ while i < 15000:
     risk_factor = random.choice(SAMPLE_RISK_ELEMENTS + SAMPLE_RISK_ACTIVITIES)
     # Select surrounding
     surrounding = random.choice(SAMPLE_SURROUNDINGS)
+    # Select distance between risk factor and detected surroundings
+    aux = random.choice([25, 50, 75, 100, 125, 150, 300, 500, 750, 1000])
+    distance = math.ceil(random.random() * aux)
     # Add data
     data.append([i, current_datetime.strftime("%d/%m/%Y %H:%M:%S"),
                  current_coordinates['lat'], current_coordinates['lng'],
                  temp_aux, wind_speed_aux, humidity_aux,
-                 risk_factor, surrounding])
+                 risk_factor, surrounding, distance])
     i = i + 1
 
 with open('sample_data.csv', 'w', newline='') as csvfile:

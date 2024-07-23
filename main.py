@@ -9,16 +9,17 @@ with open('sample_data.csv', newline='') as csvfile:
     for index, row in enumerate(spamreader):
         if index == 0:
             continue
-        cases.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]])
+        cases.append([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9]])
 
-results = [['ID', 'Datetime', 'Latitude', 'Longitude', 'Temperature (Cº)', 'Wind Speed (Km/H)', 'Humidity (%)', 'Risk factor', 'Surroundings', 'Expected decisions', 'Given decisions', 'Success']]
+results = [['ID', 'Datetime', 'Latitude', 'Longitude', 'Temperature (Cº)', 'Wind Speed (Km/H)', 'Humidity (%)', 'Risk factor', 'Surroundings', 'Distance (Mts)', 'Decisions']]
 
 for case in cases:
     drone_data = {
         "risk_factor": case[7],
         "surroundings": case[8],
+        "distance": int(case[9]),
         "location": [float(case[2]), float(case[3])],
-        "datetime": datetime.strptime(case[1], "%d/%m/%Y %H:%M:%S")
+        "datetime": datetime.strptime(case[1], "%d/%m/%Y %H:%M:%S"),
         }
     weather_data = {
         "temperature": int(case[4]),
@@ -28,10 +29,8 @@ for case in cases:
 
     # Evaluate situation and make decisions
     situation = da.evaluate_situation(drone_data, weather_data)
-    expected_decisions = da.make_decisions(situation)
-    given_decisions = da.make_decisions(situation, True)
-    success = expected_decisions == given_decisions
-    results.append([case[0], case[1], case[2], case[3], case[4], case[5], case[6], case[7], case[8], expected_decisions, given_decisions, success])
+    decisions = da.make_decisions(situation)
+    results.append([case[0], case[1], case[2], case[3], case[4], case[5], case[6], case[7], case[8], case[9], decisions])
 
 with open('results.csv', 'w', newline='') as csvfile:
     spamwriter = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
