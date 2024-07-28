@@ -41,13 +41,13 @@ def evaluate_situation(drone_data={}, weather_data={}):
         weather_danger = True
 
     # Evaluate distance between risk_factor and detected surroundings
-    if distance < 50:
+    if risk_factor != 'none' and distance < 50:
         score = score + 3
         close_distance = True
-    elif distance < 100:
+    elif risk_factor != 'none' and distance < 100:
         score = score + 2
         close_distance = True
-    elif distance < 250:
+    elif risk_factor != 'none' and distance < 250:
         score = score + 1
 
     # Evaluate dron data

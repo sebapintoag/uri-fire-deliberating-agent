@@ -70,6 +70,8 @@ while i < 15000:
     # Select distance between risk factor and detected surroundings
     aux = random.choice([25, 50, 75, 100, 125, 150, 300, 500, 750, 1000])
     distance = math.ceil(random.random() * aux)
+    if risk_factor == 'none':
+        distance = 0
     # Add data
     data.append([i, current_datetime.strftime("%d/%m/%Y %H:%M:%S"),
                  current_coordinates['lat'], current_coordinates['lng'],
