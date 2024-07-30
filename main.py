@@ -17,7 +17,7 @@ for case in cases:
     drone_data = {
         "risk_factor": case[7],
         "surroundings": case[8],
-        "distance": int(case[9]),
+        "distance": int(case[9]) if case[9] else None,
         "location": [float(case[2]), float(case[3])],
         "datetime": datetime.strptime(case[1], "%d/%m/%Y %H:%M:%S"),
         }

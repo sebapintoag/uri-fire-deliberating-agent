@@ -71,7 +71,7 @@ while i < 15000:
     aux = random.choice([25, 50, 75, 100, 125, 150, 300, 500, 750, 1000])
     distance = math.ceil(random.random() * aux)
     if risk_factor == 'none':
-        distance = 0
+        distance = None
     # Add data
     data.append([i, current_datetime.strftime("%d/%m/%Y %H:%M:%S"),
                  current_coordinates['lat'], current_coordinates['lng'],
